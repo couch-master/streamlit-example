@@ -1,3 +1,83 @@
+import streamlit as st
+import os
+import numpy as np
+import cv2
+import tempfile
+import shutil
+from src.approaches.train_image_translation import Image_translation_block
+from src.approaches.train_audio2landmark import Audio2landmark_model
+from src.autovc.AutoVC_mel_Convertor_retrain_version import AutoVC_mel_Convertor
+import util.utils as util
+from scipy.signal import savgol_filter
+import face_alignment
+import torch
+
+# Set up face alignment predictor
+predictor = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cuda', flip_input=True)
+
+def main():
+    st.title('Audio-Visual Facial Animation')
+
+    # Upload image and audio file
+    uploaded_image = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
+    uploaded_audio = st.file_uploader("Choose an audio file...", type=['wav'])
+
+    if uploaded_image and uploaded_audio:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            image_path = os.path.join(temp_dir, uploaded_image.name)
+            audio_path = os.path.join(temp_dir, uploaded_audio.name)
+
+            # Save uploaded files to temp directory
+            with open(image_path, "wb") as f:
+                f.write(uploaded_image.getvalue())
+            with open(audio_path, "wb") as f:
+                f.write(uploaded_audio.getvalue())
+
+            # Load and preprocess image
+            img = cv2.imread(image_path)
+            shapes = predictor.get_landmarks(img)
+            if not shapes or len(shapes) != 1:
+                st.error('Cannot detect face landmarks. Please try another image.')
+            else:
+                shape_3d = shapes[0]
+                process_image_and_audio(image_path, audio_path, shape_3d, temp_dir)
+
+def process_image_and_audio(image_path, audio_path, shape_3d, temp_dir):
+    # Process audio to get embeddings and audio features
+    audio_features, audio_embeddings = process_audio(audio_path)
+
+    # Run the audio to landmark model
+    landmarks = run_audio_to_landmark_model(audio_features, audio_embeddings)
+
+    # Apply landmark adjustments and normalization
+    adjusted_landmarks = adjust_landmarks(landmarks, shape_3d)
+
+    # Generate facial animation from landmarks
+    animation_frames = generate_animation(adjusted_landmarks, image_path)
+
+    # Display the animation or the first frame for now
+    st.image(animation_frames[0], caption='Generated Animation Frame', use_column_width=True)
+    st.success('Processing complete!')
+
+def process_audio(audio_path):
+    # Placeholder: Implement audio processing
+    return "audio_features", "audio_embeddings"
+
+def run_audio_to_landmark_model(audio_features, audio_embeddings):
+    # Placeholder: Implement audio to landmark model processing
+    return "landmarks"
+
+def adjust_landmarks(landmarks, original_landmarks):
+    # Placeholder: Adjust landmarks based on the model's output
+    return landmarks
+
+def generate_animation(landmarks, image_path):
+    # Placeholder: Generate animation frames based on adjusted landmarks
+    return [cv2.imread(image_path)]  # This should return a list of images (frames)
+
+if __name__ == "__main__":
+    main()
+
 # import sys
 # sys.path.append('thirdparty/AdaptiveWingLoss')
 # import os, glob
