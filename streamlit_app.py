@@ -7,7 +7,7 @@ import os, glob
 import numpy as np
 #import cv2
 import argparse
-from src.approaches.train_image_translation import Image_translation_block
+#from src.approaches.train_image_translation import Image_translation_block
 import torch
 import pickle
 import face_alignment
