@@ -5,7 +5,7 @@ import sys
 sys.path.append('thirdparty/AdaptiveWingLoss')
 import os, glob
 import numpy as np
-import cv2
+#import cv2
 import argparse
 from src.approaches.train_image_translation import Image_translation_block
 import torch
